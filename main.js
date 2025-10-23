@@ -1,20 +1,22 @@
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
+require("@electron/remote/main").initialize();
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: true, // ✅ ADD THIS
-      contextIsolation: false, // ✅ ADD THIS
+      nodeIntegration: true, 
+      contextIsolation: false, 
       preload: path.join(__dirname, "preload.js"), // Optional
     },
     frame: false,
     transparent: true,
     backgroundColor: "#00000000",
   });
-
+  
+  require("@electron/remote/main").enable(mainWindow.webContents);
   mainWindow.loadFile("pages/index.html");
 }
 
