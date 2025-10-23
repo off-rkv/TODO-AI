@@ -1,21 +1,97 @@
 document.addEventListener("DOMContentLoaded", function () {
   console.log("🚀 App starting...");
+  // ===== LISTEN FOR CALENDAR IFRAME MESSAGES =====
+  window.addEventListener("message", function (event) {
+    // Security check (optional but recommended)
+    // if (event.origin !== window.location.origin) return;
 
+    if (event.data.type === "openTodoModal") {
+      const clickedDate = new Date(event.data.date);
+
+      // Open modal with selected date
+      todoModal.classList.add("active");
+      todoInput.value = "";
+      selectedDate = clickedDate;
+      currentDate = new Date(clickedDate);
+      timeEnabled = false;
+      timePicker.classList.remove("active");
+      timeToggleBtn.classList.remove("active");
+      timeToggleBtn.textContent = "⏰ Set Time (Optional)";
+      hideError();
+
+      setTimeout(() => {
+        todoInput.focus();
+        renderCalendar();
+        updateDisplayDateTime();
+      }, 100);
+    }
+  });
   // ===== SIDEBAR TOGGLE =====
   const toggleButton = document.getElementById("sidebarToggle");
   const mainContent = document.getElementById("mainContent");
   let sidebarVisible = true;
 
   function toggleSidebar() {
-    sidebarVisible = !sidebarVisible;
-    if (sidebarVisible) {
-      mainContent.classList.remove("sidebar-hidden");
+    const sidebar = document.getElementById("sidebar");
+    const windowWidth = window.innerWidth;
+
+    if (windowWidth <= 600) {
+      // Phone mode: Toggle sidebar overlay
+      sidebar.classList.toggle("active");
     } else {
-      mainContent.classList.add("sidebar-hidden");
+      // Desktop mode: Show/hide normally
+      sidebarVisible = !sidebarVisible;
+      if (sidebarVisible) {
+        mainContent.classList.remove("sidebar-hidden");
+      } else {
+        mainContent.classList.add("sidebar-hidden");
+      }
     }
   }
 
   toggleButton.addEventListener("click", toggleSidebar);
+
+  // Close sidebar when clicking outside (phone mode only)
+  mainContent.addEventListener("click", function (e) {
+    const sidebar = document.getElementById("sidebar");
+    const windowWidth = window.innerWidth;
+
+    if (windowWidth <= 600 && sidebar.classList.contains("active")) {
+      if (!sidebar.contains(e.target) && !toggleButton.contains(e.target)) {
+        sidebar.classList.remove("active");
+      }
+    }
+  });
+
+  // ===== PANEL NAVIGATION =====
+  const sidebarItems = document.querySelectorAll(".sidebar ul li");
+  const panels = document.querySelectorAll(".panel");
+
+  sidebarItems.forEach((item) => {
+    item.addEventListener("click", function () {
+      const panelName = this.getAttribute("data-panel");
+
+      // Remove active class from all items
+      sidebarItems.forEach((i) => i.classList.remove("active"));
+
+      // Add active class to clicked item
+      this.classList.add("active");
+
+      // Hide all panels
+      panels.forEach((p) => p.classList.remove("active"));
+
+      // Show selected panel
+      const targetPanel = document.getElementById(`${panelName}-panel`);
+      if (targetPanel) {
+        targetPanel.classList.add("active");
+
+        // Refresh important panel when opened
+        if (panelName === "important") {
+          displayImportantTodos();
+        }
+      }
+    });
+  });
 
   // ===== MODAL ELEMENTS =====
   const addTodoBtn = document.getElementById("addTodoBtn");
@@ -33,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const errorBubble = document.getElementById("errorBubble");
   const errorText = document.getElementById("errorText");
 
-  // ===== CALENDAR ELEMENTS =====
+  // ===== CALENDAR ELEMENTS (MINI CALENDAR IN MODAL) =====
   const calendarDates = document.getElementById("calendarDates");
   const calMonth = document.getElementById("calMonth");
   const calPrev = document.getElementById("calPrev");
@@ -60,7 +136,7 @@ document.addEventListener("DOMContentLoaded", function () {
     modalContent.classList.remove("error");
   }
 
-  // ===== CALENDAR FUNCTIONS =====
+  // ===== MINI CALENDAR FUNCTIONS (IN MODAL) =====
   function renderCalendar() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -159,7 +235,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return scheduledDate;
   }
 
-  // ✅ NEW: Check if date is in the past
   function isDateInPast() {
     if (!selectedDate) return false;
 
@@ -172,14 +247,11 @@ document.addEventListener("DOMContentLoaded", function () {
     return selected < today;
   }
 
-  // ✅ UPDATED: Check if scheduled date/time is in past
   function isScheduledInPast() {
-    // Check date first
     if (isDateInPast()) {
       return true;
     }
 
-    // Check time (only if time enabled)
     if (!timeEnabled) return false;
 
     const scheduledDate = calculateScheduledDate();
@@ -189,7 +261,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return scheduledDate < now;
   }
 
-  // ✅ UPDATED: Display date/time with validation
   function updateDisplayDateTime() {
     const scheduledDate = calculateScheduledDate();
     if (!scheduledDate) {
@@ -206,7 +277,6 @@ document.addEventListener("DOMContentLoaded", function () {
       day: "numeric",
     });
 
-    // ✅ Check if date is in the past
     if (isDateInPast()) {
       if (timeEnabled) {
         const hours = scheduledDate.getHours();
@@ -225,7 +295,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // ✅ Show time only if enabled
     if (timeEnabled) {
       const hours = scheduledDate.getHours();
       const minutes = scheduledDate.getMinutes();
@@ -233,7 +302,6 @@ document.addEventListener("DOMContentLoaded", function () {
         minutes
       ).padStart(2, "0")}`;
 
-      // Check if time is in past (for today)
       const now = new Date();
       if (scheduledDate < now) {
         displayDateTime.textContent = `${dateStr} at ${timeStr} ❌`;
@@ -337,6 +405,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // ===== MODAL OPEN =====
   addTodoBtn.addEventListener("click", function () {
+    // Check if we're in important panel
+    const importantPanel = document.getElementById("important-panel");
+    const isImportantPanelActive =
+      importantPanel && importantPanel.classList.contains("active");
+
     todoModal.classList.add("active");
     todoInput.value = "";
     selectedDate = new Date();
@@ -346,6 +419,11 @@ document.addEventListener("DOMContentLoaded", function () {
     timeToggleBtn.classList.remove("active");
     timeToggleBtn.textContent = "⏰ Set Time (Optional)";
     hideError();
+
+    // Store context
+    window.currentTodoContext = {
+      isImportant: isImportantPanelActive,
+    };
 
     setTimeout(() => {
       todoInput.focus();
@@ -407,7 +485,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // ✅ UPDATED: Check if date is in past
     if (isDateInPast()) {
       showError(
         "Cannot save TODO with a past date! Please select today or a future date."
@@ -415,7 +492,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // ✅ Check past time ONLY if time is enabled
     if (timeEnabled && isScheduledInPast()) {
       showError("Cannot save TODO in the past! Please select a future time.");
       return;
@@ -439,6 +515,8 @@ document.addEventListener("DOMContentLoaded", function () {
       time: scheduledTime,
       completed: false,
       createdAt: new Date(),
+      starred:
+        window.currentTodoContext && window.currentTodoContext.isImportant,
     };
 
     console.log("📝 Creating TODO:", todo);
@@ -455,6 +533,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     displayTodos();
+    displayImportantTodos();
     todoModal.classList.remove("active");
     hideError();
   });
@@ -516,6 +595,25 @@ document.addEventListener("DOMContentLoaded", function () {
         <button class="todo-delete">🗑️</button>
       `;
 
+      const todoTextElement = todoItem.querySelector(".todo-text p");
+
+      setTimeout(() => {
+        const lineHeight = parseInt(
+          window.getComputedStyle(todoTextElement).lineHeight
+        );
+        const height = todoTextElement.offsetHeight;
+        const lines = Math.round(height / lineHeight);
+
+        if (
+          lines === 1 &&
+          todoTextElement.scrollWidth > todoTextElement.offsetWidth
+        ) {
+          todoTextElement.classList.add("ticker");
+        } else if (lines > 1) {
+          todoTextElement.classList.add("multiline");
+        }
+      }, 100);
+
       const checkbox = todoItem.querySelector(".todo-checkbox");
       checkbox.addEventListener("change", function (e) {
         e.stopPropagation();
@@ -543,10 +641,105 @@ document.addEventListener("DOMContentLoaded", function () {
           }
 
           displayTodos();
+          displayImportantTodos();
         }
       });
 
       todoListContainer.appendChild(todoItem);
+    });
+  }
+
+  // ===== DISPLAY IMPORTANT TODOS =====
+  function displayImportantTodos() {
+    const importantList = document.querySelector(".important-list");
+
+    if (!importantList) return;
+
+    const existingTodos = importantList.querySelectorAll(".todo-item");
+    existingTodos.forEach((item) => item.remove());
+
+    const starredTodos = todos.filter((todo) => todo.starred);
+
+    if (starredTodos.length === 0) {
+      return;
+    }
+
+    starredTodos.sort((a, b) => {
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return new Date(a.date) - new Date(b.date);
+    });
+
+    starredTodos.forEach((todo) => {
+      const todoItem = document.createElement("div");
+      todoItem.classList.add("todo-item");
+      if (todo.completed) {
+        todoItem.classList.add("completed");
+      }
+
+      let dateTimeStr = "";
+      if (todo.date) {
+        const todoDate = new Date(todo.date);
+        const now = new Date();
+        const isPast = todo.time && todoDate < now;
+
+        const dateStr = todoDate.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+
+        if (todo.time) {
+          const icon = isPast ? "⏰" : "📅";
+          dateTimeStr = `<span class="todo-datetime">${icon} ${dateStr} • ${todo.time}</span>`;
+        } else {
+          dateTimeStr = `<span class="todo-datetime">📅 ${dateStr}</span>`;
+        }
+      }
+
+      todoItem.innerHTML = `
+        <div class="todo-content">
+          <input type="checkbox" class="todo-checkbox" ${
+            todo.completed ? "checked" : ""
+          }>
+          <div class="todo-text">
+            <p>⭐ ${todo.text}</p>
+            ${dateTimeStr}
+          </div>
+        </div>
+        <button class="todo-delete">🗑️</button>
+      `;
+
+      const checkbox = todoItem.querySelector(".todo-checkbox");
+      checkbox.addEventListener("change", function (e) {
+        e.stopPropagation();
+        todo.completed = this.checked;
+        todoItem.classList.toggle("completed", this.checked);
+
+        if (typeof storage !== "undefined") {
+          storage.saveTodos(todos);
+        }
+      });
+
+      const deleteBtn = todoItem.querySelector(".todo-delete");
+      deleteBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const index = todos.findIndex((t) => t.id === todo.id);
+        if (index !== -1) {
+          todos.splice(index, 1);
+
+          if (typeof storage !== "undefined") {
+            storage.saveTodos(todos);
+          }
+
+          displayTodos();
+          displayImportantTodos();
+        }
+      });
+
+      importantList.appendChild(todoItem);
     });
   }
 

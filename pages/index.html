@@ -25,22 +25,50 @@
       <!-- Main content area -->
       <div class="main-content" id="mainContent">
         <div class="sidebar" id="sidebar">
-          <h2>Sidebar</h2>
+          <h2>Navigation</h2>
           <ul>
-            <li>My Todos</li>
-            <li>Schedule Planner</li>
-            <li>Important</li>
-            <li>Progress</li>
-            <li>CrossNotify</li>
-            <li>Team Planner</li>
-            <li>Ai</li>
-            <li>Setting</li>
+            <li data-panel="home" class="active">Home</li>
+            <li data-panel="calendar">Calendar</li>
+            <li data-panel="important">Important</li>
+            <li data-panel="progress">Progress</li>
+            <li data-panel="crossnotify">CrossNotify</li>
+            <li data-panel="team">Team Planner</li>
+            <li data-panel="profile">Profile</li>
+            <li data-panel="setting">Setting</li>
           </ul>
         </div>
 
-        <div class="todo-list">
-          <h1>TODO AI</h1>
-          <p>tasks will appear here</p>
+        <!-- Main Content Panels -->
+        <div class="content-panels">
+          <!-- HOME PANEL -->
+          <div class="panel active" id="home-panel">
+            <div class="todo-list">
+              <h1>TODO AI - Home</h1>
+              <p>Your tasks will appear here</p>
+            </div>
+          </div>
+
+          <!-- CALENDAR PANEL -->
+          <div class="panel" id="calendar-panel">
+            <iframe
+              src="calendar.html"
+              id="calendarFrame"
+              style="
+                width: 100%;
+                height: 100%;
+                border: none;
+                border-radius: 15px;
+              "
+            ></iframe>
+          </div>
+
+          <!-- IMPORTANT PANEL -->
+          <div class="panel" id="important-panel">
+            <div class="todo-list important-list">
+              <h1>⭐ Important Tasks</h1>
+              <p>Starred tasks will appear here</p>
+            </div>
+          </div>
         </div>
 
         <div class="right-panel">
@@ -151,12 +179,25 @@
         </div>
       </div>
     </div>
+    <!-- Card Stack Modal -->
+    <div class="card-stack-modal" id="cardStackModal">
+      <div class="card-stack-overlay" id="cardStackOverlay"></div>
+
+      <div class="card-stack-container" id="cardStackContainer">
+        <button class="card-close" id="cardStackClose">✕</button>
+        <div class="card-counter" id="cardCounter">1 / 1</div>
+
+        <button class="card-nav prev" id="cardPrev">◀</button>
+        <button class="card-nav next" id="cardNext">▶</button>
+
+        <!-- Cards will be dynamically added here -->
+      </div>
+    </div>
 
     <script src="../js/window-controls.js"></script>
     <script>
       const storage = require("../js/storage.js");
     </script>
     <script src="../js/app.js"></script>
-    
   </body>
 </html>

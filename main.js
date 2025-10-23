@@ -6,6 +6,8 @@ function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    minWidth:400,
+    minHeight:300,
     webPreferences: {
       nodeIntegration: true, 
       contextIsolation: false, 
@@ -13,8 +15,8 @@ function createWindow() {
     },
     frame: false,
     transparent: true,
-    resizable:true,
     backgroundColor: "#00000000",
+    resizable:true,
   });
   
   require("@electron/remote/main").enable(mainWindow.webContents);
