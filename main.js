@@ -13,6 +13,7 @@ function createWindow() {
     },
     frame: false,
     transparent: true,
+    resizable:true,
     backgroundColor: "#00000000",
   });
   
