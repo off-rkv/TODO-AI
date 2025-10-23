@@ -1,0 +1,27 @@
+{
+  "name": "todo-ai",
+  "version": "1.0.0",
+  "description": "todo-ai application powered by ai",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/off-rkv/TODO-AI.git"
+  },
+  "author": "Ratnesh",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/off-rkv/TODO-AI/issues"
+  },
+  "homepage": "https://github.com/off-rkv/TODO-AI#readme",
+  "devDependencies": {
+    "electron": "^38.3.0",
+    "electron-reload": "^2.0.0-alpha.1"
+  },
+  "dependencies": {
+    "electron-store": "^11.0.2"
+  }
+}
