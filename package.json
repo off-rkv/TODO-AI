@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/off-rkv/TODO-AI#readme",
   "devDependencies": {
-    "electron": "^38.3.0",
+    "electron": "^38.4.0",
     "electron-reload": "^2.0.0-alpha.1"
   },
   "dependencies": {
