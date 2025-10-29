@@ -104,6 +104,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const timeToggleBtn = document.getElementById("timeToggleBtn");
   const timePicker = document.getElementById("timePicker");
   const aiBtn = document.getElementById("aiBtn");
+  const todoSubject = document.getElementById("todoSubject");
+
   const todoInput = document.getElementById("todoInput");
   const displayDateTime = document.getElementById("displayDateTime");
   const errorBubble = document.getElementById("errorBubble");
@@ -451,6 +453,65 @@ document.addEventListener("DOMContentLoaded", function () {
   // ===== TODO STORAGE =====
   const todoListContainer = document.querySelector(".todo-list");
   let todos = [];
+  // ===== DETAIL PANEL FUNCTIONS =====
+  function showTodoDetailPanel(todo) {
+    let detailPanel = document.getElementById("todoDetailPanel");
+
+    if (!detailPanel) {
+      detailPanel = document.createElement("div");
+      detailPanel.id = "todoDetailPanel";
+      detailPanel.className = "todo-detail-panel";
+      document.body.appendChild(detailPanel);
+    }
+
+    let html = `
+      <div class="detail-panel-overlay" onclick="closeTodoDetailPanel()"></div>
+      <div class="detail-panel-content">
+        <button class="detail-panel-close" onclick="closeTodoDetailPanel()">✕</button>
+        
+        <div class="detail-panel-body">
+          ${todo.subject ? `<h2>${todo.subject}</h2>` : ""}
+          
+          ${
+            todo.date
+              ? `
+            <div class="detail-panel-datetime">
+              <span>📅 ${new Date(todo.date).toLocaleDateString("en-US", {
+                weekday: "short",
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}</span>
+              ${todo.time ? `<span>⏰ ${todo.time}</span>` : ""}
+            </div>
+          `
+              : ""
+          }
+          
+          ${
+            todo.text
+              ? `
+            <div class="detail-panel-text">
+              <label>Details:</label>
+              <p>${todo.text}</p>
+            </div>
+          `
+              : ""
+          }
+        </div>
+      </div>
+    `;
+
+    detailPanel.innerHTML = html;
+    detailPanel.classList.add("active");
+  }
+
+  window.closeTodoDetailPanel = function () {
+    const detailPanel = document.getElementById("todoDetailPanel");
+    if (detailPanel) {
+      detailPanel.classList.remove("active");
+    }
+  };
 
   function loadTodos() {
     try {
@@ -476,12 +537,15 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // ===== SAVE TODO =====
+  // ===== SAVE TODO =====
   saveBtn.addEventListener("click", function () {
+    const subject = todoSubject.value.trim();
     const todoText = todoInput.value.trim();
 
-    if (todoText === "") {
-      showError("Please write a TODO task!");
-      todoInput.focus();
+    // Validation: Need at least subject OR details
+    if (subject === "" && todoText === "") {
+      showError("Please write a subject or details!");
+      todoSubject.focus();
       return;
     }
 
@@ -510,6 +574,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const todo = {
       id: Date.now() + Math.random(),
+      subject: subject, // NEW
       text: todoText,
       date: scheduledDate,
       time: scheduledTime,
@@ -536,6 +601,10 @@ document.addEventListener("DOMContentLoaded", function () {
     displayImportantTodos();
     todoModal.classList.remove("active");
     hideError();
+
+    // Clear both fields
+    todoSubject.value = "";
+    todoInput.value = "";
   });
 
   // ===== DISPLAY TODOS =====
@@ -582,37 +651,31 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
+      // Determine what text to display
+      let displayText;
+      if (todo.subject && todo.subject.trim() !== "") {
+        displayText = todo.subject;
+      } else if (todo.text) {
+        displayText = todo.text.substring(0, 50);
+        if (todo.text.length > 50) {
+          displayText += "...";
+        }
+      } else {
+        displayText = "Untitled Task";
+      }
+
       todoItem.innerHTML = `
         <div class="todo-content">
           <input type="checkbox" class="todo-checkbox" ${
             todo.completed ? "checked" : ""
           }>
           <div class="todo-text">
-            <p>${todo.text}</p>
+            <p>${displayText}</p>
             ${dateTimeStr}
           </div>
         </div>
         <button class="todo-delete">🗑️</button>
       `;
-
-      const todoTextElement = todoItem.querySelector(".todo-text p");
-
-      setTimeout(() => {
-        const lineHeight = parseInt(
-          window.getComputedStyle(todoTextElement).lineHeight
-        );
-        const height = todoTextElement.offsetHeight;
-        const lines = Math.round(height / lineHeight);
-
-        if (
-          lines === 1 &&
-          todoTextElement.scrollWidth > todoTextElement.offsetWidth
-        ) {
-          todoTextElement.classList.add("ticker");
-        } else if (lines > 1) {
-          todoTextElement.classList.add("multiline");
-        }
-      }, 100);
 
       const checkbox = todoItem.querySelector(".todo-checkbox");
       checkbox.addEventListener("change", function (e) {
@@ -643,6 +706,18 @@ document.addEventListener("DOMContentLoaded", function () {
           displayTodos();
           displayImportantTodos();
         }
+      });
+
+      // NEW: Add click handler to show details
+      todoItem.addEventListener("click", function (e) {
+        if (
+          e.target.classList.contains("todo-checkbox") ||
+          e.target.classList.contains("todo-delete") ||
+          e.target.closest(".todo-delete")
+        ) {
+          return;
+        }
+        showTodoDetailPanel(todo);
       });
 
       todoListContainer.appendChild(todoItem);

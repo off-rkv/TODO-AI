@@ -53,12 +53,6 @@
             <iframe
               src="calendar.html"
               id="calendarFrame"
-              style="
-                width: 100%;
-                height: 100%;
-                border: none;
-                border-radius: 15px;
-              "
             ></iframe>
           </div>
 
@@ -90,12 +84,29 @@
         <!-- Left panel: Write TODO -->
         <div class="modal-left">
           <h2>Create New TODO</h2>
-          <textarea
-            id="todoInput"
-            placeholder="Write your task here..."
-            rows="10"
-          ></textarea>
 
+          <!-- New : Subject/title input -->
+          <div class="input-group">
+            <label for="todoSubject">SUBJECT (Optional)</label>
+            <input 
+            type="text"
+            id="todoSubject"
+            placeholder="e.g., Client Presentation, Weekly Groceries..."
+            maxlength="100"
+            />
+          </div>
+
+          <!-- Details text area-->
+           <div class="input-group">
+            <label for="todoInput">DETAILS</label>
+            <textarea
+            id="todoInput"
+            placeholder="Add more details or let AI enhance it..."
+            rows="10"
+            ></textarea>
+           </div>
+
+         
           <!-- ✅ Save/Cancel at bottom right -->
           <div class="modal-actions">
             <button class="cancel-btn" id="cancelBtn">Cancel</button>

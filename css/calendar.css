@@ -4,6 +4,16 @@
   box-sizing: border-box;
 }
 
+#calendar-panel {
+  padding: 0;
+}
+
+#calendarFrame {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: white;
