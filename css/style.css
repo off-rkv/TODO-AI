@@ -713,7 +713,7 @@ body.resizing .content-panels iframe {
     border: 2px solid #e0e0e0;
     border-radius: 20px;
     padding: 10px 15px;
-    font-size: 14px;
+    font-size: 10px;
     font-family: inherit;
     resize: none;
     min-height: 40px;
@@ -928,6 +928,69 @@ body.resizing .content-panels iframe {
     background: rgba(0, 0, 0, 0.5);
     -webkit-backdrop-filter: blur(5px);
     backdrop-filter: blur(5px);
+}
+
+/* ===== MODAL STAR (TOP LEFT) ===== */
+.modal-star {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  background: none;
+  border: none;
+  font-size: 32px;
+  cursor: pointer;
+  z-index: 10;
+  color: #ddd;
+  transition: all 0.3s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-star:hover {
+  transform: scale(1.2) rotate(15deg);
+  color: #ffbd2e;
+}
+
+.modal-star.starred {
+  color: #ffbd2e;
+  animation: starShine 1.5s ease-in-out infinite;
+}
+
+/* ✨ Beautiful shining animation */
+@keyframes starShine {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 5px #ffbd2e);
+  }
+  25% {
+    transform: scale(1.15) rotate(-10deg);
+    filter: drop-shadow(0 0 15px #ffbd2e);
+  }
+  50% {
+    transform: scale(1.3) rotate(0deg);
+    filter: drop-shadow(0 0 25px #ffbd2e);
+  }
+  75% {
+    transform: scale(1.15) rotate(10deg);
+    filter: drop-shadow(0 0 15px #ffbd2e);
+  }
+}
+
+/* ✨ Burst animation when first clicked */
+@keyframes starBurst {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.8) rotate(180deg);
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+  }
+}
+
+.modal-star.burst {
+  animation: starBurst 0.6s ease-out;
 }
 
 .error-bubble {
@@ -1168,6 +1231,30 @@ body.resizing .content-panels iframe {
 
 .save-btn:active {
     transform: translateY(0);
+}
+
+/* ===== TODO ITEM STAR BUTTON ===== */
+.todo-star {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;              /* ✅ CHANGE THIS - adjust star size (16-24px) */
+  opacity: 0.6;                 /* ✅ Slightly more visible default */
+  transition: all 0.2s;
+  color: #ffbd2e;
+  padding: 0;                   /* ✅ CHANGE - remove padding */
+  margin: 0 8px;                /* ✅ ADD - spacing from other buttons */
+  line-height: 1;               /* ✅ ADD - centers star vertically */
+  display: flex;                /* ✅ ADD - better alignment */
+  align-items: center;          /* ✅ ADD - centers content */
+  justify-content: center;      /* ✅ ADD - centers content */
+  min-width: 24px;              /* ✅ ADD - ensures clickable area */
+  height: 24px;                 /* ✅ ADD - ensures clickable area */
+}
+
+.todo-star:hover {
+  opacity: 1;
+  transform: scale(1.3) rotate(15deg);
 }
 
 /* ===== MINI CALENDAR (IN MODAL) ===== */

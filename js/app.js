@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let isResizing = false;
   let startX = 0;
   let startWidth = 0;
+  let isStarred = false;
 
   resizeHandle.addEventListener("mousedown", function (e) {
     isResizing = true;
@@ -236,11 +237,33 @@ document.addEventListener("DOMContentLoaded", function () {
   const timePicker = document.getElementById("timePicker");
   const aiBtn = document.getElementById("aiBtn");
   const todoSubject = document.getElementById("todoSubject");
+  const modalStar = document.getElementById("modalStar");
 
   const todoInput = document.getElementById("todoInput");
   const displayDateTime = document.getElementById("displayDateTime");
   const errorBubble = document.getElementById("errorBubble");
   const errorText = document.getElementById("errorText");
+
+  // ===== STAR TOGGLE FUNCTIONALITY =====
+  modalStar.addEventListener("click", function () {
+    isStarred = !isStarred; // Toggle starred state
+
+    if (isStarred) {
+      // Star is now ON
+      modalStar.textContent = "★"; // Filled star
+      modalStar.classList.add("starred");
+
+      // Add burst animation
+      modalStar.classList.add("burst");
+      setTimeout(() => {
+        modalStar.classList.remove("burst");
+      }, 600);
+    } else {
+      // Star is now OFF
+      modalStar.textContent = "☆"; // Empty star
+      modalStar.classList.remove("starred");
+    }
+  });
 
   // ===== CALENDAR ELEMENTS (MINI CALENDAR IN MODAL) =====
   const calendarDates = document.getElementById("calendarDates");
@@ -549,6 +572,11 @@ document.addEventListener("DOMContentLoaded", function () {
     selectedDate = new Date();
     currentDate = new Date();
     timeEnabled = false;
+
+    isStarred = isImportantPanelActive; // Auto-star if in Important panel
+    modalStar.textContent = isStarred ? "★" : "☆";
+    modalStar.classList.toggle("starred", isStarred);
+
     timePicker.classList.remove("active");
     timeToggleBtn.classList.remove("active");
     timeToggleBtn.textContent = "⏰ Set Time (Optional)";
@@ -711,8 +739,7 @@ document.addEventListener("DOMContentLoaded", function () {
       time: scheduledTime,
       completed: false,
       createdAt: new Date(),
-      starred:
-        window.currentTodoContext && window.currentTodoContext.isImportant,
+      starred: isStarred,
     };
 
     console.log("📝 Creating TODO:", todo);
@@ -749,6 +776,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    // Sort todos by date
     todos.sort((a, b) => {
       if (!a.date) return 1;
       if (!b.date) return -1;
@@ -762,6 +790,7 @@ document.addEventListener("DOMContentLoaded", function () {
         todoItem.classList.add("completed");
       }
 
+      // Format date/time display
       let dateTimeStr = "";
       if (todo.date) {
         const todoDate = new Date(todo.date);
@@ -782,7 +811,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      // Determine what text to display
+      // Determine what text to display (subject or truncated details)
       let displayText;
       if (todo.subject && todo.subject.trim() !== "") {
         displayText = todo.subject;
@@ -795,19 +824,24 @@ document.addEventListener("DOMContentLoaded", function () {
         displayText = "Untitled Task";
       }
 
+      // Create todo item HTML with star button
       todoItem.innerHTML = `
-        <div class="todo-content">
-          <input type="checkbox" class="todo-checkbox" ${
-            todo.completed ? "checked" : ""
-          }>
-          <div class="todo-text">
-            <p>${displayText}</p>
-            ${dateTimeStr}
-          </div>
+      <div class="todo-content">
+        <input type="checkbox" class="todo-checkbox" ${
+          todo.completed ? "checked" : ""
+        }>
+        <div class="todo-text">
+          <p>${todo.starred ? "⭐ " : ""}${displayText}</p>
+          ${dateTimeStr}
         </div>
-        <button class="todo-delete">🗑️</button>
-      `;
+      </div>
+      <button class="todo-star" data-id="${todo.id}">${
+        todo.starred ? "★" : "☆"
+      }</button>
+      <button class="todo-delete">🗑️</button>
+    `;
 
+      // Checkbox handler
       const checkbox = todoItem.querySelector(".todo-checkbox");
       checkbox.addEventListener("change", function (e) {
         e.stopPropagation();
@@ -817,8 +851,13 @@ document.addEventListener("DOMContentLoaded", function () {
         if (typeof storage !== "undefined") {
           storage.saveTodos(todos);
         }
+        displayImportantTodos();
+        console.log(
+          `✅ Checkbox toggled in Home for: ${todo.subject || todo.text}`
+        );
       });
 
+      // Delete button handler
       const deleteBtn = todoItem.querySelector(".todo-delete");
       deleteBtn.addEventListener("click", function (e) {
         e.preventDefault();
@@ -839,12 +878,49 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
 
-      // NEW: Add click handler to show details
+      // ⭐ Star button handler (NEW!)
+      const starBtn = todoItem.querySelector(".todo-star");
+      starBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        todo.starred = !todo.starred;
+
+        // Update star button icon
+        this.textContent = todo.starred ? "★" : "☆";
+
+        // Update text with star emoji
+        const textP = todoItem.querySelector(".todo-text p");
+        const currentText = textP.textContent;
+
+        if (todo.starred) {
+          // Add star emoji if not already there
+          if (!currentText.startsWith("⭐")) {
+            textP.textContent = "⭐ " + currentText;
+          }
+        } else {
+          // Remove star emoji
+          textP.textContent = currentText.replace("⭐ ", "");
+        }
+
+        // Save to storage
+        if (typeof storage !== "undefined") {
+          storage.saveTodos(todos);
+        }
+
+        // Refresh important panel
+        displayImportantTodos();
+
+        console.log(`⭐ Toggled star for: ${todo.subject || todo.text}`);
+      });
+
+      // Click handler to show details in right panel
       todoItem.addEventListener("click", function (e) {
+        // Don't open detail if clicking checkbox, star, or delete button
         if (
           e.target.classList.contains("todo-checkbox") ||
           e.target.classList.contains("todo-delete") ||
-          e.target.closest(".todo-delete")
+          e.target.classList.contains("todo-star") ||
+          e.target.closest(".todo-delete") ||
+          e.target.closest(".todo-star")
         ) {
           return;
         }
@@ -1024,16 +1100,32 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
+      // Determine what text to display
+      let displayText;
+      if (todo.subject && todo.subject.trim() !== "") {
+        displayText = todo.subject;
+      } else if (todo.text) {
+        displayText = todo.text.substring(0, 50);
+        if (todo.text.length > 50) {
+          displayText += "...";
+        }
+      } else {
+        displayText = "Untitled Task";
+      }
+
       todoItem.innerHTML = `
         <div class="todo-content">
           <input type="checkbox" class="todo-checkbox" ${
             todo.completed ? "checked" : ""
           }>
           <div class="todo-text">
-            <p>⭐ ${todo.text}</p>
+            <p>⭐ ${displayText}</p>
             ${dateTimeStr}
           </div>
         </div>
+        <button class="todo-star" data-id="${todo.id}">${
+        todo.starred ? "★" : "☆"
+      }</button>
         <button class="todo-delete">🗑️</button>
       `;
 
@@ -1046,6 +1138,10 @@ document.addEventListener("DOMContentLoaded", function () {
         if (typeof storage !== "undefined") {
           storage.saveTodos(todos);
         }
+        displayTodos();
+        console.log(
+          `✅ Checkbox toggled in Important for: ${todo.subject || todo.text}`
+        );
       });
 
       const deleteBtn = todoItem.querySelector(".todo-delete");
@@ -1066,9 +1162,61 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
 
+      const starBtn = todoItem.querySelector(".todo-star");
+      starBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        todo.starred = !todo.starred;
+
+        // Update star button icon
+        this.textContent = todo.starred ? "★" : "☆";
+
+        // Update text with star emoji
+        const textP = todoItem.querySelector(".todo-text p");
+        const currentText = textP.textContent;
+
+        if (todo.starred) {
+          // Add star emoji if not already there
+          if (!currentText.startsWith("⭐")) {
+            textP.textContent = "⭐ " + currentText;
+          }
+        } else {
+          // Remove star emoji
+          textP.textContent = currentText.replace("⭐ ", "");
+        }
+
+        // Save to storage
+        if (typeof storage !== "undefined") {
+          storage.saveTodos(todos);
+        }
+
+        // If unstarred, refresh both lists
+        displayTodos();
+        displayImportantTodos();
+
+        console.log(
+          `⭐ Toggled star in Important for: ${todo.subject || todo.text}`
+        );
+      });
+      
+      todoItem.addEventListener("click", function (e) {
+        // Don't open detail if clicking checkbox, star, or delete button
+        if (
+          e.target.classList.contains("todo-checkbox") ||
+          e.target.classList.contains("todo-delete") ||
+          e.target.classList.contains("todo-star") ||
+          e.target.closest(".todo-delete") ||
+          e.target.closest(".todo-star")
+        ) {
+          return;
+        }
+        showTodoInRightPanel(todo);
+      });
+
       importantList.appendChild(todoItem);
     });
   }
+
+  
 
   // ===== LOAD ON STARTUP =====
   setTimeout(loadTodos, 200);

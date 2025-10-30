@@ -2,6 +2,8 @@ const { app, BrowserWindow } = require("electron");
 const path = require("path");
 require("@electron/remote/main").initialize();
 
+require("electron-reload")(__dirname);
+
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1200,
