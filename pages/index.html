@@ -24,6 +24,8 @@
 
       <!-- Main content area -->
       <div class="main-content" id="mainContent">
+
+        <!-- Column 1: Sidebar -->
         <div class="sidebar" id="sidebar">
           <h2>Navigation</h2>
           <ul>
@@ -38,6 +40,7 @@
           </ul>
         </div>
 
+         <!-- Column 2: Main Content Panels (middle) -->
         <!-- Main Content Panels -->
         <div class="content-panels">
           <!-- HOME PANEL -->
@@ -47,15 +50,16 @@
               <p>Your tasks will appear here</p>
             </div>
           </div>
-
+          
           <!-- CALENDAR PANEL -->
-          <div class="panel" id="calendar-panel">
-            <iframe
-              src="calendar.html"
-              id="calendarFrame"
-            ></iframe>
-          </div>
-
+    <div class="panel" id="calendar-panel">
+      <iframe
+        src="calendar.html"
+        id="calendarFrame"
+        title="Calendar view for TODO AI tasks"
+      ></iframe>
+    </div>
+          
           <!-- IMPORTANT PANEL -->
           <div class="panel" id="important-panel">
             <div class="todo-list important-list">
@@ -64,9 +68,157 @@
             </div>
           </div>
         </div>
+        
+         <!-- Column 3: Resize Handle -->
+        <div class="resize-handle" id="resizeHandle"></div>
+        
+        <!-- Column 4: Right Panel -->
+        <div class="right-panel" id="rightPanel">
+          <!-- Empty state (when no TODO selected)-->
+          <div class="right-panel-empty" id="rightPanelEmpty">
+            <div class="empty-state">
+              <span class="empty-icon">💬</span>
+              <h3>Select a TODO to view details</h3>
+              <p>Click on any task to see its chat and details</p>
+            </div>
+          </div>
 
-        <div class="right-panel">
-          <h1>Right side panel</h1>
+          <!-- Active State (when todo selected)-->
+          <div
+            class="right-panel-content"
+            id="rightPanelContent"
+            style="display: none"
+          >
+            <!-- Header Section -->
+            <div class="todo-detail-header">
+              <!-- Banner with emoji and actions-->
+              <div class="todo-banner" id="todoBanner">
+                <div class="banner-overlay">
+                  <div class="banner-emoji" id="bannerEmoji">📝</div>
+                  <div class="banner-actions">
+                    <button class="banner-btn" id="editTodoBtn" title="Edit">
+                      ✏️
+                    </button>
+                    <button
+                      class="banner-btn"
+                      id="deleteTodoBtn"
+                      title="Delete"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Subject and Date/Time-->
+              <div class="todo-info">
+                <div class="todo-info-left">
+                  <h2 class="todo-subject" id="todoDetailSubject">
+                    Task Subject
+                  </h2>
+                  <div class="todo-meta" id="todoDetailMeta">
+                    <span>📅 Oct 29, 2025</span>
+                    <span>⏰ 14:00</span>
+                  </div>
+                </div>
+                <div class="todo-info-actions">
+                  <button class="banner-btn" id="editTodoBtn" title="Edit">
+                    ✏️
+                  </button>
+                  <button class="banner-btn" id="deleteTodoBtn" title="Delete">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- Chat Container-->
+            <div class="todo-chat-container">
+              <!-- Pinned Original Todo (white Box)-->
+              <div class="todo-original-message" id="todoOriginalMessage">
+                <div class="original-message-content">
+                  <span class="message-label">📍 Original TODO:</span>
+                  <p id="originalTodoText">
+                    Your task description goes here lorem123456...
+                  </p>
+                </div>
+              </div>
+
+              <!-- Chat message (scrollable)-->
+              <div class="todo-chat-messages" id="todoChatMessages">
+                <!-- Message will be added here dynamically-->
+                <!-- Dummy AI Message 1 -->
+                <div class="chat-message ai">
+                  <div class="message-bubble">
+                    <p class="message-text">
+                      Great! I can help you break this down. Let's start with
+                      the first step.
+                    </p>
+                    <span class="message-time">10:30 AM</span>
+                    <div class="ai-message-actions">
+                      <button
+                        class="update-original-btn"
+                        title="Update Original TODO"
+                      >
+                        ↻
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Dummy User Message 1 -->
+                <div class="chat-message user">
+                  <div class="message-bubble">
+                    <p class="message-text">Thanks! What should I do first?</p>
+                    <span class="message-time">10:32 AM</span>
+                  </div>
+                </div>
+
+                <!-- Dummy AI Message 2 -->
+                <div class="chat-message ai">
+                  <div class="message-bubble">
+                    <p class="message-text">
+                      First, gather all the materials you need. Then, create an
+                      outline. Finally, start working on the main content.
+                    </p>
+                    <span class="message-time">10:33 AM</span>
+                    <div class="ai-message-actions">
+                      <button
+                        class="update-original-btn"
+                        title="Update Original TODO"
+                      >
+                        ↻
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Dummy User Message 2 -->
+                <div class="chat-message user">
+                  <div class="message-bubble">
+                    <p class="message-text">
+                      Perfect! I'll start right away. 👍
+                    </p>
+                    <span class="message-time">10:35 AM</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Input Area-->
+            <div class="todo-chat-input">
+              <textarea
+                id="chatInputField"
+                placeholder="Type message or @todo to ask AI..."
+                rows="1"
+              ></textarea>
+              <button class="chat-btn ai-btn" id="chatAiBtn" title="Ask AI">
+                <span class="ai-icon">✨</span>
+              </button>
+              <button class="chat-btn send-btn" id="chatSendBtn" title="Send">
+                <span class="send-icon">➤</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -88,25 +240,24 @@
           <!-- New : Subject/title input -->
           <div class="input-group">
             <label for="todoSubject">SUBJECT (Optional)</label>
-            <input 
-            type="text"
-            id="todoSubject"
-            placeholder="e.g., Client Presentation, Weekly Groceries..."
-            maxlength="100"
+            <input
+              type="text"
+              id="todoSubject"
+              placeholder="e.g., Client Presentation, Weekly Groceries..."
+              maxlength="100"
             />
           </div>
 
           <!-- Details text area-->
-           <div class="input-group">
+          <div class="input-group">
             <label for="todoInput">DETAILS</label>
             <textarea
-            id="todoInput"
-            placeholder="Add more details or let AI enhance it..."
-            rows="10"
+              id="todoInput"
+              placeholder="Add more details or let AI enhance it..."
+              rows="10"
             ></textarea>
-           </div>
+          </div>
 
-         
           <!-- ✅ Save/Cancel at bottom right -->
           <div class="modal-actions">
             <button class="cancel-btn" id="cancelBtn">Cancel</button>

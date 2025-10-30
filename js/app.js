@@ -1,5 +1,110 @@
 document.addEventListener("DOMContentLoaded", function () {
   console.log("🚀 App starting...");
+
+  // ===== RESIZE HANDLE FUNCTIONALITY =====
+  const resizeHandle = document.getElementById("resizeHandle");
+  const rightPanel = document.getElementById("rightPanel");
+  const mainContent = document.getElementById("mainContent");
+  let isResizing = false;
+  let startX = 0;
+  let startWidth = 0;
+
+  resizeHandle.addEventListener("mousedown", function (e) {
+    isResizing = true;
+    startX = e.clientX;
+    startWidth = rightPanel.offsetWidth;
+    document.body.style.cursor = "col-resize";
+    document.body.classList.add("resizing");
+    e.preventDefault();
+  });
+
+  document.addEventListener("mousemove", function (e) {
+    if (!isResizing) return;
+
+    // Calculate how much mouse moved (LEFT = positive, RIGHT = negative)
+    const deltaX = startX - e.clientX;
+
+    // Calculate new width
+    const newWidth = startWidth + deltaX;
+
+    // Limit between 100px and 600px (allowing your calendar's 100px)
+    if (newWidth >= 100 && newWidth <= 600) {
+      const isSidebarHidden = mainContent.classList.contains("sidebar-hidden");
+
+      if (isSidebarHidden) {
+        mainContent.style.gridTemplateColumns = `0px 1fr 5px ${newWidth}px`;
+      } else {
+        mainContent.style.gridTemplateColumns = `200px 1fr 5px ${newWidth}px`;
+      }
+    }
+  });
+
+  document.addEventListener("mouseup", function () {
+    if (isResizing) {
+      isResizing = false;
+      document.body.style.cursor = "default";
+      document.body.classList.remove("resizing");
+
+      // Save width for current active panel
+      const currentWidth = rightPanel.offsetWidth;
+      saveRightPanelWidth(currentActivePanel, currentWidth);
+
+      console.log(`💾 Saved ${currentActivePanel} width: ${currentWidth}px`);
+    }
+  });
+
+  // ===== PANEL WIDTH STORAGE =====
+  function getPanelWidthKey(panelName) {
+    return `rightPanelWidth_${panelName}`;
+  }
+
+  function saveRightPanelWidth(panelName, width) {
+    localStorage.setItem(getPanelWidthKey(panelName), width);
+    console.log(`💾 Saved ${panelName} right panel width: ${width}px`);
+  }
+
+  function loadRightPanelWidth(panelName) {
+    const saved = localStorage.getItem(getPanelWidthKey(panelName));
+
+    if (saved) {
+      return parseInt(saved);
+    }
+
+    // ✅ SET CUSTOM DEFAULT WIDTH PER PANEL
+    const defaultWidths = {
+      home: 350, // Home panel default
+      calendar: 250,
+      important: 350, // Important panel default
+      progress: 300, // Progress panel default
+      crossnotify: 350,
+      team: 350,
+      profile: 350,
+      setting: 350,
+    };
+
+    // Return custom default or fallback to 350px
+    return defaultWidths[panelName] || 350;
+  }
+
+  function applyRightPanelWidth(panelName) {
+    const width = loadRightPanelWidth(panelName);
+
+    // ✅ Check if sidebar is visible
+    const isSidebarHidden = mainContent.classList.contains("sidebar-hidden");
+
+    if (isSidebarHidden) {
+      // When sidebar is hidden, first column = 0px
+      mainContent.style.gridTemplateColumns = `0px 1fr 5px ${width}px`;
+    } else {
+      // When sidebar is visible, first column = 200px
+      mainContent.style.gridTemplateColumns = `200px 1fr 5px ${width}px`;
+    }
+
+    console.log(
+      `📐 Applied ${panelName} width: ${width}px (sidebar hidden: ${isSidebarHidden})`
+    );
+  }
+
   // ===== LISTEN FOR CALENDAR IFRAME MESSAGES =====
   window.addEventListener("message", function (event) {
     // Security check (optional but recommended)
@@ -25,10 +130,19 @@ document.addEventListener("DOMContentLoaded", function () {
         updateDisplayDateTime();
       }, 100);
     }
+
+    // ===== INITIALIZE RIGHT PANEL STATE =====
+    document.addEventListener("DOMContentLoaded", function () {
+      // Start with empty state visible
+      const rightPanelEmpty = document.getElementById("rightPanelEmpty");
+      const rightPanelContent = document.getElementById("rightPanelContent");
+
+      if (rightPanelEmpty) rightPanelEmpty.style.display = "flex";
+      if (rightPanelContent) rightPanelContent.style.display = "none";
+    });
   });
   // ===== SIDEBAR TOGGLE =====
   const toggleButton = document.getElementById("sidebarToggle");
-  const mainContent = document.getElementById("mainContent");
   let sidebarVisible = true;
 
   function toggleSidebar() {
@@ -46,6 +160,7 @@ document.addEventListener("DOMContentLoaded", function () {
       } else {
         mainContent.classList.add("sidebar-hidden");
       }
+      applyRightPanelWidth(currentActivePanel);
     }
   }
 
@@ -66,10 +181,17 @@ document.addEventListener("DOMContentLoaded", function () {
   // ===== PANEL NAVIGATION =====
   const sidebarItems = document.querySelectorAll(".sidebar ul li");
   const panels = document.querySelectorAll(".panel");
+  //const rightPanel = document.getElementById("rightPanel");
 
   sidebarItems.forEach((item) => {
     item.addEventListener("click", function () {
       const panelName = this.getAttribute("data-panel");
+
+      // Save current panel's width before switching
+      if (currentActivePanel) {
+        const currentWidth = rightPanel.offsetWidth;
+        saveRightPanelWidth(currentActivePanel, currentWidth);
+      }
 
       // Remove active class from all items
       sidebarItems.forEach((i) => i.classList.remove("active"));
@@ -90,6 +212,15 @@ document.addEventListener("DOMContentLoaded", function () {
           displayImportantTodos();
         }
       }
+
+      // ✅ NEW: Apply saved width for new panel
+      applyRightPanelWidth(panelName);
+
+      // ✅ NEW: Update current active panel
+      currentActivePanel = panelName;
+
+      // ✅ NEW: Load right panel content for this panel
+      loadRightPanelForPanel(panelName);
     });
   });
 
@@ -124,6 +255,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let currentDate = new Date();
   let selectedDate = new Date();
   let timeEnabled = false;
+  let currentActivePanel = "home";
 
   // ===== ERROR HANDLING =====
   function showError(message) {
@@ -537,7 +669,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // ===== SAVE TODO =====
-  // ===== SAVE TODO =====
   saveBtn.addEventListener("click", function () {
     const subject = todoSubject.value.trim();
     const todoText = todoInput.value.trim();
@@ -717,11 +848,132 @@ document.addEventListener("DOMContentLoaded", function () {
         ) {
           return;
         }
-        showTodoDetailPanel(todo);
+        showTodoInRightPanel(todo);
       });
 
       todoListContainer.appendChild(todoItem);
     });
+  }
+
+  // ===== RIGHT PANEL MANAGEMENT =====
+  const rightPanelEmpty = document.getElementById("rightPanelEmpty");
+  const rightPanelContent = document.getElementById("rightPanelContent");
+
+  function showTodoInRightPanel(todo) {
+    // Hide empty state, show content
+    rightPanelEmpty.style.display = "none";
+    rightPanelContent.style.display = "flex";
+
+    // Update banner color (random or from todo)
+    const todoBanner = document.getElementById("todoBanner");
+    // If TODO doesn't have a saved color, generate one
+    if (!todo.bannerColor) {
+      todo.bannerColor = Math.floor(Math.random() * 5) + 1;
+      // Save the TODO with its new color
+      if (typeof storage !== "undefined") {
+        storage.saveTodos(todos);
+      }
+    }
+    todoBanner.className = `todo-banner banner-color-${todo.bannerColor}`;
+
+    // Update emoji
+    const bannerEmoji = document.getElementById("bannerEmoji");
+    bannerEmoji.textContent = todo.emoji || "📝";
+
+    // Update subject
+    const todoDetailSubject = document.getElementById("todoDetailSubject");
+    todoDetailSubject.textContent = todo.subject || "Untitled Task";
+
+    // Update date/time
+    const todoDetailMeta = document.getElementById("todoDetailMeta");
+    let metaHTML = "";
+    if (todo.date) {
+      const dateStr = new Date(todo.date).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      metaHTML += `<span>📅 ${dateStr}</span>`;
+    }
+    if (todo.time) {
+      metaHTML += `<span>⏰ ${todo.time}</span>`;
+    }
+    todoDetailMeta.innerHTML = metaHTML || "<span>No date set</span>";
+
+    // Update original TODO text
+    const originalTodoText = document.getElementById("originalTodoText");
+    originalTodoText.textContent = todo.text || "No details provided";
+
+    // Load chat messages for this TODO
+    loadChatMessages(todo.id);
+
+    // Store current TODO ID globally
+    window.currentTodoId = todo.id;
+  }
+
+  function hideTodoRightPanel() {
+    // Show empty state, hide content
+    rightPanelEmpty.style.display = "flex";
+    rightPanelContent.style.display = "none";
+    window.currentTodoId = null;
+  }
+
+  function loadChatMessages(todoId) {
+    // This will load chat messages from storage later
+    // For now, keep the dummy messages
+    console.log("Loading chat for TODO:", todoId);
+  }
+
+  function loadRightPanelForPanel(panelName) {
+    const rightPanelEmpty = document.getElementById("rightPanelEmpty");
+    const rightPanelContent = document.getElementById("rightPanelContent");
+
+    // ✅ Make sure elements exist
+    if (!rightPanelEmpty || !rightPanelContent) {
+      console.error("Right panel elements not found!");
+      return;
+    }
+
+    if (panelName === "home") {
+      // Home shows todo details when clicked
+      // Start with empty state
+      rightPanelEmpty.style.display = "flex";
+      rightPanelContent.style.display = "none";
+    } else if (panelName === "calendar") {
+      // Calendar shows empty state with custom message
+      rightPanelEmpty.style.display = "flex";
+      rightPanelContent.style.display = "none";
+
+      // Update empty state message for calendar
+      const emptyStateH3 = rightPanelEmpty.querySelector(".empty-state h3");
+      const emptyStateP = rightPanelEmpty.querySelector(".empty-state p");
+      if (emptyStateH3) emptyStateH3.textContent = "Calendar View";
+      if (emptyStateP)
+        emptyStateP.textContent = "Click on a date to create tasks";
+    } else if (panelName === "important") {
+      // Important shows empty state or starred tasks summary
+      rightPanelEmpty.style.display = "flex";
+      rightPanelContent.style.display = "none";
+
+      // Update empty state message for important
+      const emptyStateH3 = rightPanelEmpty.querySelector(".empty-state h3");
+      const emptyStateP = rightPanelEmpty.querySelector(".empty-state p");
+      if (emptyStateH3) emptyStateH3.textContent = "Important Tasks";
+      if (emptyStateP) emptyStateP.textContent = "Star tasks to see them here";
+    } else {
+      // Other panels show generic empty state
+      rightPanelEmpty.style.display = "flex";
+      rightPanelContent.style.display = "none";
+
+      // Reset to default message
+      const emptyStateH3 = rightPanelEmpty.querySelector(".empty-state h3");
+      const emptyStateP = rightPanelEmpty.querySelector(".empty-state p");
+      if (emptyStateH3)
+        emptyStateH3.textContent = "Select a TODO to view details";
+      if (emptyStateP)
+        emptyStateP.textContent =
+          "Click on any task to see its chat and details";
+    }
   }
 
   // ===== DISPLAY IMPORTANT TODOS =====
@@ -820,6 +1072,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // ===== LOAD ON STARTUP =====
   setTimeout(loadTodos, 200);
+
+  // ✅ ADD THIS: Load saved width for home panel
+  currentActivePanel = "home";
+  applyRightPanelWidth("home");
+  loadRightPanelForPanel("home");
 
   console.log("✅ App ready!");
 });
